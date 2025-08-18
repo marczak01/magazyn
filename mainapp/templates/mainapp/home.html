@@ -4,7 +4,6 @@
 {% block title %}Magazyn — Strona główna{% endblock title %}
 
 {% block content %}
-
 <!-- Ciemny hero na pełną wysokość -->
 <section class="min-vh-100 d-flex align-items-center bg-dark text-light position-relative overflow-hidden" data-bs-theme="dark">
   <div class="position-absolute top-0 start-0 w-100 h-100 hero-bg opacity-75"></div>
@@ -27,7 +26,7 @@
       </div>
     </div>
 
-    <!-- Prezentacja modułów -->
+    <!-- Prezentacja modułów (informacyjnie, bez przejścia) -->
     <div class="row g-4 mt-5">
       <div class="col-12 col-md-4">
         <div class="card glass h-100 text-light">
@@ -35,6 +34,7 @@
             <h5 class="card-title mb-2">📦 Produkty</h5>
             <p class="card-text text-secondary mb-0">
               Kartoteki, EAN, ceny detaliczne/hurtowe i specyfikacje.
+              <span class="d-block small mt-2 text-secondary">🔒 Dostęp po zalogowaniu</span>
             </p>
           </div>
         </div>
@@ -46,6 +46,7 @@
             <h5 class="card-title mb-2">🛒 Zamówienia</h5>
             <p class="card-text text-secondary mb-0">
               Rezerwacje, realizacja i statusy wysyłki.
+              <span class="d-block small mt-2 text-secondary">🔒 Dostęp po zalogowaniu</span>
             </p>
           </div>
         </div>
@@ -57,15 +58,16 @@
             <h5 class="card-title mb-2">📊 Raporty</h5>
             <p class="card-text text-secondary mb-0">
               Sprzedaż, stany i rotacja produktów.
+              <span class="d-block small mt-2 text-secondary">🔒 Dostęp po zalogowaniu</span>
             </p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Drobna stopka informacji -->
+    <!-- Stopka informacji + copyright -->
     <div class="text-center text-secondary mt-5">
-      <small>Python & Django · UI: Bootstrap 5.3 &copy; 2025</small>
+      <small>Python &amp; Django · UI: Bootstrap 5.3 · &copy; 2025</small>
     </div>
   </div>
 </section>
