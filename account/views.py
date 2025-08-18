@@ -31,3 +31,6 @@ def logout_view(request):
     logout(request)
     messages.success(request, "Wylogowano pomyślnie.")
     return redirect("mainapp:home")
+
+def register(request):
+    return render(request, "account/register.html")
