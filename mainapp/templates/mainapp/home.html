@@ -1,0 +1,98 @@
+{% extends "mainapp/base.html" %}
+{% load static %}
+
+{% block title %}Magazyn — Strona główna{% endblock title %}
+
+{% block content %}
+<!-- Ciemny hero na pełną wysokość -->
+<section class="min-vh-100 d-flex align-items-center bg-dark text-light position-relative overflow-hidden" data-bs-theme="dark">
+  <div class="position-absolute top-0 start-0 w-100 h-100 hero-bg opacity-75"></div>
+
+  <div class="container position-relative">
+    <div class="row justify-content-center">
+      <div class="col-12 col-lg-9 text-center animate-fade">
+        <h1 class="display-4 fw-bold lh-1">Witaj w systemie Magazyn</h1>
+        <p class="lead text-secondary mt-3 mb-4">
+          Zarządzaj produktami, zamówieniami i raportami w jednym miejscu
+        </p>
+
+        <div class="d-flex justify-content-center">
+          <!-- Otwiera modal logowania/rejestracji -->
+          <button class="btn btn-lg btn-primary px-5 shadow"
+                  data-bs-toggle="modal" data-bs-target="#authModal">
+            Rozpocznij pracę
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Prezentacja modułów (informacyjnie, bez przejścia) -->
+    <div class="row g-4 mt-5">
+      <div class="col-12 col-md-4">
+        <div class="card glass h-100 text-light">
+          <div class="card-body p-4">
+            <h5 class="card-title mb-2">📦 Produkty</h5>
+            <p class="card-text text-secondary mb-0">
+              Kartoteki, EAN, ceny detaliczne/hurtowe i specyfikacje.
+              <span class="d-block small mt-2 text-secondary">🔒 Dostęp po zalogowaniu</span>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-4">
+        <div class="card glass h-100 text-light">
+          <div class="card-body p-4">
+            <h5 class="card-title mb-2">🛒 Zamówienia</h5>
+            <p class="card-text text-secondary mb-0">
+              Rezerwacje, realizacja i statusy wysyłki.
+              <span class="d-block small mt-2 text-secondary">🔒 Dostęp po zalogowaniu</span>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-4">
+        <div class="card glass h-100 text-light">
+          <div class="card-body p-4">
+            <h5 class="card-title mb-2">📊 Raporty</h5>
+            <p class="card-text text-secondary mb-0">
+              Sprzedaż, stany i rotacja produktów.
+              <span class="d-block small mt-2 text-secondary">🔒 Dostęp po zalogowaniu</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stopka informacji + copyright -->
+    <div class="text-center text-secondary mt-5">
+      <small>Python &amp; Django · UI: Bootstrap 5.3 · &copy; 2025</small>
+    </div>
+  </div>
+</section>
+
+<!-- Modal logowania/rejestracji -->
+<div class="modal fade" id="authModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content bg-dark text-light" data-bs-theme="dark">
+      <div class="modal-header border-0">
+        <h5 class="modal-title">Zaloguj się lub załóż konto</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+      </div>
+      <div class="modal-body pt-0">
+        <p class="text-secondary">
+          Aby korzystać z modułów aplikacji, zaloguj się lub utwórz konto.
+        </p>
+        <div class="d-grid gap-2">
+          <a href="/account/login/" class="btn btn-primary btn-lg">Logowanie</a>
+          <a href="/account/register/" class="btn btn-outline-light btn-lg">Rejestracja</a>
+        </div>
+      </div>
+      <div class="modal-footer border-0">
+        <small class="text-secondary">🔒 Dostęp do modułów zostanie odblokowany po pomyślnym zalogowaniu.</small>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
