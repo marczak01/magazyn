@@ -1,11 +1,14 @@
 {% extends "mainapp/base.html" %}
 
-{% block title %}home page{% endblock title %}
+{% block title %}Home Page{% endblock title %}
 
 {% block content %}
-
-<h1>
-Test home page
-
-</h1>
+<div class="container py-5">
+    <!-- Nagłówek strony -->
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold text-primary">Witaj w systemie Magazyn</h1>
+        <p class="lead text-muted">Zarządzaj produktami, zamówieniami i raportami w jednym miejscu</p>
+        <a href="#" class="btn btn-lg btn-success mt-3">Rozpocznij pracę</a>
+    </div>
+</div>
 {% endblock content %}
