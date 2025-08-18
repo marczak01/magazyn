@@ -72,27 +72,55 @@
   </div>
 </section>
 
-<!-- Modal logowania/rejestracji -->
+<!-- Modal: logowanie / link do rejestracji -->
 <div class="modal fade" id="authModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content bg-dark text-light" data-bs-theme="dark">
       <div class="modal-header border-0">
-        <h5 class="modal-title">Zaloguj się lub załóż konto</h5>
+        <h5 class="modal-title">Zaloguj się</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Zamknij"></button>
       </div>
       <div class="modal-body pt-0">
-        <p class="text-secondary">
-          Aby korzystać z modułów aplikacji, zaloguj się lub utwórz konto.
-        </p>
-        <div class="d-grid gap-2">
-          <a href="/account/login/" class="btn btn-primary btn-lg">Logowanie</a>
-          <a href="/account/register/" class="btn btn-outline-light btn-lg">Rejestracja</a>
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} mb-3" role="alert">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+
+        <form method="post" action="{% url 'account:login' %}" class="needs-validation" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{% url 'account:dashboard' %}">
+          <div class="form-floating mb-3">
+            <input type="text" class="form-control" id="id_username" name="username" placeholder="Nazwa użytkownika" required autofocus>
+            <label for="id_username">Nazwa użytkownika</label>
+          </div>
+          <div class="form-floating mb-3">
+            <input type="password" class="form-control" id="id_password" name="password" placeholder="Hasło" required>
+            <label for="id_password">Hasło</label>
+          </div>
+          <div class="d-grid">
+            <button type="submit" class="btn btn-primary btn-lg">Zaloguj się</button>
+          </div>
+        </form>
+
+        <div class="text-center mt-4">
+          <span class="text-secondary">Nie masz konta?</span>
+          <a href="/account/register/" class="link-light link-underline-opacity-25 link-underline-opacity-100-hover">Zarejestruj się</a>
         </div>
       </div>
       <div class="modal-footer border-0">
-        <small class="text-secondary">🔒 Dostęp do modułów zostanie odblokowany po pomyślnym zalogowaniu.</small>
+        <small class="text-secondary">Dostęp do modułów zostanie odblokowany po zalogowaniu.</small>
       </div>
     </div>
   </div>
 </div>
+
+{# Gdy są komunikaty (np. błąd logowania), otwórz modal od razu #}
+{% if messages %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    new bootstrap.Modal(document.getElementById('authModal')).show();
+  });
+</script>
+{% endif %}
 {% endblock content %}

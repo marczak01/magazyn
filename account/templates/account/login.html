@@ -1,0 +1,84 @@
+{% extends "mainapp/base.html" %}
+{% load static %}
+
+{% block title %}Logowanie · Magazyn{% endblock title %}
+
+{% block content %}
+<section class="min-vh-100 d-flex align-items-center bg-dark text-light position-relative overflow-hidden" data-bs-theme="dark">
+  <div class="position-absolute top-0 start-0 w-100 h-100 hero-bg opacity-75"></div>
+
+  <div class="container position-relative">
+    <div class="row justify-content-center">
+      <div class="col-12 col-md-8 col-lg-5">
+        <div class="card glass border-0 rounded-4 shadow-lg animate-fade">
+          <div class="card-body p-4 p-lg-5">
+
+            <div class="text-center mb-4">
+              <h1 class="h3 fw-bold mb-1">Zaloguj się</h1>
+              <p class="text-secondary mb-0">Uzyskaj dostęp do modułów systemu Magazyn</p>
+            </div>
+
+            {# komunikaty/alerty (np. błędne dane) #}
+            {% if form and form.non_field_errors %}
+              <div class="alert alert-danger" role="alert">
+                {% for err in form.non_field_errors %}{{ err }}{% endfor %}
+              </div>
+            {% endif %}
+
+            <form method="post" action="{% url 'account:login' %}" class="needs-validation" novalidate>
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{{ next }}"/>
+
+              <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="id_username" name="username" placeholder="Nazwa użytkownika" required autofocus>
+                <label for="id_username">Nazwa użytkownika</label>
+                {% if form and form.errors.username %}
+                  <div class="invalid-feedback d-block">{{ form.errors.username|striptags }}</div>
+                {% endif %}
+              </div>
+
+              <div class="form-floating mb-3">
+                <input type="password" class="form-control" id="id_password" name="password" placeholder="Hasło" required>
+                <label for="id_password">Hasło</label>
+                {% if form and form.errors.password %}
+                  <div class="invalid-feedback d-block">{{ form.errors.password|striptags }}</div>
+                {% endif %}
+              </div>
+
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" value="1" id="remember" name="remember">
+                  <label class="form-check-label" for="remember">
+                    Zapamiętaj mnie
+                  </label>
+                </div>
+                <a href="/account/password-reset/" class="link-light link-underline-opacity-25 link-underline-opacity-100-hover">
+                  Zapomniałeś hasła?
+                </a>
+              </div>
+
+              <div class="d-grid">
+                <button type="submit" class="btn btn-primary btn-lg">Zaloguj się</button>
+              </div>
+            </form>
+
+            <div class="text-center mt-4">
+              <span class="text-secondary">Nie masz konta?</span>
+              <a href="/account/register/" class="link-light link-underline-opacity-25 link-underline-opacity-100-hover">Zarejestruj się</a>
+            </div>
+
+            <div class="text-center mt-4">
+              <a href="/" class="btn btn-outline-light btn-sm">← Wróć na stronę główną</a>
+            </div>
+
+          </div>
+        </div>
+
+        <p class="text-center text-secondary mt-4 mb-0 small">
+          Python &amp; Django · UI: Bootstrap 5.3 · &copy; 2025
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock content %}
