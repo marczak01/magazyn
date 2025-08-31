@@ -1,7 +1,114 @@
 {% extends "mainapp/base.html" %}
+{% load static %}
 
-{% block title %}dashboard{% endblock title %}
+{% block title %}Pulpit · Magazyn{% endblock title %}
 
 {% block content %}
-Test dashborad pages
+<section class="bg-dark text-light min-vh-100" data-bs-theme="dark">
+
+  <!-- Pasek top z tłem i panelem użytkownika -->
+  <div class="position-relative overflow-visible">
+    <div class="position-absolute top-0 start-0 w-100 h-100 hero-bg opacity-75"></div>
+
+    <div class="container position-relative py-5">
+      <div class="d-flex align-items-center justify-content-between gap-3">
+        <div class="animate-fade">
+          <h1 class="fw-bold mb-1 display-6">
+            Witaj, {{ request.user.first_name|default:request.user.username }} 👋
+          </h1>
+          <p class="text-secondary mb-0">Wybierz moduł aby rozpocząć pracę</p>
+        </div>
+
+        <!-- Panel użytkownika -->
+        <div class="dropdown animate-fade position-relative z-3">
+          <button
+            id="userMenuBtn"
+            class="btn btn-dark-subtle btn-lg d-flex align-items-center gap-2 rounded-pill border border-secondary-subtle px-3"
+            type="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            aria-haspopup="true"
+          >
+            <span class="avatar-initial avatar-lg">U</span>
+            <span class="small text-light-emphasis d-none d-sm-inline">Użytkownik (tymczasowa nazwa)</span>
+            <i class="bi bi-caret-down-fill small opacity-75" aria-hidden="true"></i>
+            <span class="visually-hidden">Otwórz menu użytkownika</span>
+          </button>
+
+          <!-- Większe menu (skalowane zmiennymi CSS w .app-dropdown) -->
+          <ul class="dropdown-menu dropdown-menu-end shadow-sm app-dropdown z-3 mt-2" aria-labelledby="userMenuBtn">
+            <li>
+              <button class="dropdown-item d-flex align-items-center gap-2" disabled
+                      data-bs-toggle="tooltip" data-bs-title="Wkrótce" type="button">
+                <i class="bi bi-person" aria-hidden="true"></i> Mój profil
+              </button>
+            </li>
+            <li>
+              <button class="dropdown-item d-flex align-items-center gap-2" disabled
+                      data-bs-toggle="tooltip" data-bs-title="Wkrótce" type="button">
+                <i class="bi bi-sliders" aria-hidden="true"></i> Ustawienia konta
+              </button>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'account:logout' %}">
+                <i class="bi bi-box-arrow-right" aria-hidden="true"></i> Wyloguj
+              </a>
+            </li>
+          </ul>
+        </div>
+        <!-- /Panel użytkownika -->
+      </div>
+    </div>
+  </div>
+
+  <div class="container py-5">
+    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4 tiles-grid">
+      <div class="col"><div class="tile animate-fade"><i class="bi bi-cash-register" aria-hidden="true"></i><div class="tile-title">POS</div></div></div>
+      <div class="col"><div class="tile animate-fade"><i class="bi bi-chat-dots" aria-hidden="true"></i><div class="tile-title">Dyskusje</div></div></div>
+      <div class="col"><div class="tile animate-fade"><i class="bi bi-person-badge" aria-hidden="true"></i><div class="tile-title">Agent</div></div></div>
+      <div class="col"><div class="tile animate-fade"><i class="bi bi-calendar3" aria-hidden="true"></i><div class="tile-title">Kalendarz</div></div></div>
+      <div class="col"><div class="tile animate-fade"><i class="bi bi-people" aria-hidden="true"></i><div class="tile-title">Kontakty</div></div></div>
+      <div class="col"><div class="tile animate-fade"><i class="bi bi-headset" aria-hidden="true"></i><div class="tile-title">CRM</div></div></div>
+      <div class="col"><div class="tile animate-fade"><i class="bi bi-laptop" aria-hidden="true"></i><div class="tile-title">Sprzedaż</div></div></div>
+      <div class="col"><div class="tile animate-fade"><i class="bi bi-file-earmark-text" aria-hidden="true"></i><div class="tile-title">Dokumenty</div></div></div>
+      <div class="col"><div class="tile animate-fade"><i class="bi bi-person-vcard" aria-hidden="true"></i><div class="tile-title">Klienci</div></div></div>
+      <div class="col"><div class="tile animate-fade"><i class="bi bi-play-btn" aria-hidden="true"></i><div class="tile-title">E-learning</div></div></div>
+      <div class="col"><div class="tile animate-fade"><i class="bi bi-truck" aria-hidden="true"></i><div class="tile-title">Logistyka</div></div></div>
+      <div class="col"><div class="tile animate-fade"><i class="bi bi-easel" aria-hidden="true"></i><div class="tile-title">Artykuły</div></div></div>
+      <div class="col"><div class="tile animate-fade"><i class="bi bi-bag-check" aria-hidden="true"></i><div class="tile-title">Zakupy</div></div></div>
+      <div class="col"><div class="tile animate-fade"><i class="bi bi-life-preserver" aria-hidden="true"></i><div class="tile-title">Centrum pomocy</div></div></div>
+      <div class="col"><div class="tile animate-fade"><i class="bi bi-box-seam" aria-hidden="true"></i><div class="tile-title">Magazyny</div></div></div>
+      <div class="col"><div class="tile animate-fade"><i class="bi bi-journal-richtext" aria-hidden="true"></i><div class="tile-title">Księgowość</div></div></div>
+      <div class="col"><div class="tile animate-fade"><i class="bi bi-shop" aria-hidden="true"></i><div class="tile-title">Partnerzy</div></div></div>
+      <div class="col"><div class="tile animate-fade"><i class="bi bi-gear" aria-hidden="true"></i><div class="tile-title">Ustawienia</div></div></div>
+      <div class="col"><div class="tile animate-fade"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i><div class="tile-title">Półka</div></div></div>
+      <div class="col"><div class="tile animate-fade"><i class="bi bi-person-lines-fill" aria-hidden="true"></i><div class="tile-title">Pracownicy</div></div></div>
+    </div>
+  </div>
+
+  <p class="text-center text-secondary mt-5 mb-0 small">
+    Python &amp; Django · UI: Bootstrap 5.3 · &copy; 2025
+  </p>
+</section>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
+
+    document.querySelectorAll('.tile').forEach(tile => {
+      tile.addEventListener('click', e => {
+        const r = document.createElement('span');
+        r.className = 'ripple';
+        const rect = tile.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        r.style.width = r.style.height = size + 'px';
+        r.style.left = (e.clientX - rect.left - size / 2) + 'px';
+        r.style.top  = (e.clientY - rect.top  - size / 2) + 'px';
+        tile.appendChild(r);
+        setTimeout(() => r.remove(), 600);
+      });
+    });
+  });
+</script>
 {% endblock content %}
