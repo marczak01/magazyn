@@ -1,0 +1,65 @@
+/* Specjalne style dla widoku Magazyny (warehouse.html)
+   Uwaga: brak redefinicji .hero-bg — korzystamy z globalnego style.css */
+
+/* 1) Reset globalnego powiększenia ikon w kafelkach z style.css */
+.tile .bi {
+    font-size: 1em;      /* bazowo jak tekst */
+    margin-bottom: 0;    /* bez dodatkowego odstępu pod ikoną */
+    opacity: 1;
+  }
+  
+  /* 2) Ikona w nagłówku kafelka (obok nazwy magazynu) – delikatnie większa */
+  .tile h2 .bi {
+    font-size: 1.25em;
+    vertical-align: -0.1em;
+    opacity: .75;
+    margin-right: .5rem;
+  }
+  
+  /* 3) Wiersz lokalizacji – ikonka odrobinę większa od tekstu */
+  .tile .small .bi-geo-alt {
+    font-size: 1.05em;
+    margin-right: .35rem;
+    vertical-align: -0.08em;
+    opacity: .9;
+  }
+  
+  /* 4) Ikony w przyciskach operacyjnych – lekko większe od labela */
+  .ops-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .25rem;
+    white-space: nowrap;
+  }
+  
+  .ops-btn .bi,
+  .ops-btn i {
+    font-size: 1.05em;      /* subtelne powiększenie względem tekstu przycisku */
+    line-height: 1;
+    transform: translateY(.5px);
+    margin-right: .35rem;
+  }
+  
+  /* Pasek postępu – nie zmieniamy logiki szerokości (wraca jak w style.css) */
+  .tile .progress {
+    --bs-progress-bg: transparent;
+  }
+  .tile .progress-bar {
+    width: calc(var(--w, 0) * 1%);   /* ← kluczowa poprawka */
+    transition: width .6s ease;
+  }
+  
+  /* (opcjonalnie) drobne korekty spacingu w kafelkach na bardzo wąskich ekranach */
+  @media (max-width: 360px) {
+    .tile .d-flex.gap-2 > .ops-btn {
+      padding-left: .5rem;
+      padding-right: .5rem;
+    }
+  }
+
+  .warehouse-card { 
+    content-visibility: auto;
+    contain-intrinsic-size: 420px;
+  }
+  

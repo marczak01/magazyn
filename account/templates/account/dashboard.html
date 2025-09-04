@@ -78,7 +78,12 @@
       <div class="col"><div class="tile animate-fade"><i class="bi bi-easel" aria-hidden="true"></i><div class="tile-title">Artykuły</div></div></div>
       <div class="col"><div class="tile animate-fade"><i class="bi bi-bag-check" aria-hidden="true"></i><div class="tile-title">Zakupy</div></div></div>
       <div class="col"><div class="tile animate-fade"><i class="bi bi-life-preserver" aria-hidden="true"></i><div class="tile-title">Centrum pomocy</div></div></div>
-      <div class="col"><div class="tile animate-fade"><i class="bi bi-box-seam" aria-hidden="true"></i><div class="tile-title">Magazyny</div></div></div>
+      <div class="col">
+        <a class="tile animate-fade" href="{% url 'account:warehouse' %}">
+          <i class="bi bi-box-seam" aria-hidden="true"></i>
+          <div class="tile-title">Magazyny</div>
+        </a>
+      </div>
       <div class="col"><div class="tile animate-fade"><i class="bi bi-journal-richtext" aria-hidden="true"></i><div class="tile-title">Księgowość</div></div></div>
       <div class="col"><div class="tile animate-fade"><i class="bi bi-shop" aria-hidden="true"></i><div class="tile-title">Partnerzy</div></div></div>
       <div class="col"><div class="tile animate-fade"><i class="bi bi-gear" aria-hidden="true"></i><div class="tile-title">Ustawienia</div></div></div>

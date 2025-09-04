@@ -1,0 +1,780 @@
+{% extends "mainapp/base.html" %}
+{% load static %}
+
+{% block title %}Magazyny · Przegląd i zarządzanie{% endblock title %}
+
+{% block content %}
+<!-- styl dla tego widoku -->
+<link rel="stylesheet" href="{% static 'css/warehouse.css' %}">
+
+<section class="bg-dark text-light min-vh-100" data-bs-theme="dark">
+
+  <!-- HERO / pasek tła + nawigacja użytkownika -->
+  <div class="position-relative overflow-visible">
+    <div class="position-absolute top-0 start-0 w-100 h-100 hero-bg opacity-75"></div>
+
+    <div class="container position-relative py-4">
+      <div class="d-flex align-items-center justify-content-between gap-3">
+        <div class="animate-fade">
+          <h1 class="fw-bold mb-1 display-6">Magazyny</h1>
+          <p class="text-secondary mb-0">Przegląd i zarządzanie operacjami magazynowymi</p>
+        </div>
+
+        <!-- Panel użytkownika -->
+        <div class="dropdown animate-fade position-relative z-3">
+          <button id="userMenuBtn"
+            class="btn btn-dark-subtle btn-lg d-flex align-items-center gap-2 rounded-pill border border-secondary-subtle px-3"
+            type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">
+            <span class="avatar-initial avatar-lg" aria-hidden="true">U</span>
+            <span class="small text-light-emphasis d-none d-sm-inline">Użytkownik</span>
+            <i class="bi bi-caret-down-fill small opacity-75" aria-hidden="true"></i>
+            <span class="visually-hidden">Otwórz menu użytkownika</span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end shadow-sm app-dropdown z-3 mt-2" aria-labelledby="userMenuBtn">
+            <li>
+              <button class="dropdown-item d-flex align-items-center gap-2" disabled data-bs-toggle="tooltip"
+                data-bs-title="Wkrótce" type="button">
+                <i class="bi bi-person" aria-hidden="true"></i> Mój profil
+              </button>
+            </li>
+            <li>
+              <button class="dropdown-item d-flex align-items-center gap-2" disabled data-bs-toggle="tooltip"
+                data-bs-title="Wkrótce" type="button">
+                <i class="bi bi-sliders" aria-hidden="true"></i> Ustawienia konta
+              </button>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+            <li>
+              <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'account:logout' %}">
+                <i class="bi bi-box-arrow-right" aria-hidden="true"></i> Wyloguj
+              </a>
+            </li>
+          </ul>
+        </div>
+        <!-- /Panel użytkownika -->
+      </div>
+    </div>
+  </div>
+
+  <!-- FILTRY / WYSZUKIWANIE / SORTOWANIE -->
+  <div class="container position-relative py-3">
+    <div class="glass rounded-3 p-3 p-md-4 animate-fade">
+      <form class="row g-3 align-items-end" id="filtersForm" onsubmit="return false;" role="search" aria-label="Filtry magazynów">
+        <div class="col-12 col-md-4">
+          <label for="searchWarehouses" class="form-label small text-secondary">Szukaj magazynu</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-search" aria-hidden="true"></i></span>
+            <input type="search" id="searchWarehouses" class="form-control" placeholder="np. MAG 1, Warszawa…"
+              autocomplete="off" inputmode="search" aria-describedby="resultsCount">
+          </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+          <label for="statusFilter" class="form-label small text-secondary">Filtr statusów</label>
+          <select id="statusFilter" class="form-select">
+            <option value="all" selected>Wszystkie</option>
+            <option value="to-process">Do obsłużenia</option>
+            <option value="waiting">Oczekujące</option>
+            <option value="late">Opóźnione</option>
+            <option value="backorders">Zaległe zamówienia</option>
+          </select>
+        </div>
+
+        <div class="col-6 col-md-3">
+          <label for="sortBy" class="form-label small text-secondary">Sortuj</label>
+          <select id="sortBy" class="form-select">
+            <option value="name" selected>Alfabetycznie (A→Z)</option>
+            <option value="-name">Alfabetycznie (Z→A)</option>
+            <option value="ops">Po liczbie operacji rosnąco</option>
+            <option value="-ops">Po liczbie operacji malejąco</option>
+            <option value="location">Po lokalizacji</option>
+          </select>
+        </div>
+
+        <div class="col-12 col-md-2 d-grid">
+          <button type="reset" id="resetFilters" class="btn btn-outline-light border-secondary-subtle">
+            <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Resetuj
+          </button>
+        </div>
+
+        <div class="col-12">
+          <div class="d-flex align-items-center gap-2 small text-secondary">
+            <i class="bi bi-info-circle" aria-hidden="true"></i>
+            <span>Kolory:
+              <span class="badge bg-success-subtle text-success-emphasis">DO OBSŁUŻENIA</span>,
+              <span class="badge bg-warning-subtle text-warning-emphasis">Oczekujące</span>,
+              <span class="badge bg-danger-subtle text-danger-emphasis">Opóźnione</span>,
+              <span class="badge bg-primary-subtle text-primary-emphasis">Zaległe zamówienia</span>
+            </span>
+            <span class="ms-auto small" id="resultsCount" aria-live="polite"></span>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- LISTA / SIATKA MAGAZYNÓW -->
+  <div class="container py-4">
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xxl-4 g-4" id="warehouseGrid" role="list">
+
+      <!-- MAG 1 -->
+      <div class="col warehouse-card" role="listitem" data-name="MAG 1" data-location="Warszawa" data-ops="10835" data-waiting="142"
+        data-late="149" data-backorders="106">
+        <div class="tile h-100 p-0 overflow-hidden">
+          <div class="p-3 p-sm-4">
+            <div class="d-flex align-items-center justify-content-between gap-3">
+              <h2 class="h5 mb-0 text-truncate">
+                <i class="bi bi-box-seam me-2 opacity-75" aria-hidden="true"></i>
+                <span class="warehouse-name">MAG 1</span>
+              </h2>
+              <span class="badge rounded-pill bg-success-subtle text-success-emphasis px-3 py-2">
+                <span class="fw-semibold ops">10 835</span> DO OBSŁUŻENIA
+              </span>
+            </div>
+
+            <div class="small text-secondary mt-1">
+              <i class="bi bi-geo-alt me-1" aria-hidden="true"></i>
+              <span class="warehouse-location">Warszawa</span>
+            </div>
+
+            <hr class="border-secondary-subtle my-3">
+
+            <div class="d-flex flex-wrap gap-2">
+              <span class="badge bg-warning-subtle text-warning-emphasis">
+                Oczekujące: <span class="waiting">142</span>
+              </span>
+              <span class="badge bg-danger-subtle text-danger-emphasis">
+                Opóźnione: <span class="late">149</span>
+              </span>
+              <span class="badge bg-primary-subtle text-primary-emphasis">
+                Zaległe zamówienia: <span class="backorders">106</span>
+              </span>
+            </div>
+          </div>
+
+          <div class="px-3 px-sm-4 pb-3 pb-sm-4">
+            <div class="progress bg-transparent border border-secondary-subtle rounded-2" style="height: 10px;">
+              <div class="progress-bar bg-danger" role="progressbar" style="--w: 0;"
+                aria-label="Udział opóźnień" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+            </div>
+            <p class="small text-secondary mt-2 mb-0">
+              Udział opóźnień w aktywnych sprawach:
+              <span class="late-share fw-semibold">0%</span>
+            </p>
+          </div>
+
+          <div class="p-3 p-sm-4 pt-0">
+            <div class="d-flex gap-2">
+              <a href="#" class="btn btn-outline-light flex-fill border-secondary-subtle ops-btn" role="button">
+                <i class="bi bi-box-arrow-in-down"></i> Przyjęcia
+              </a>
+              <a href="#" class="btn btn-outline-light flex-fill border-secondary-subtle ops-btn" role="button">
+                <i class="bi bi-arrow-left-right"></i> Transfery
+              </a>
+              <a href="#" class="btn btn-outline-light flex-fill border-secondary-subtle ops-btn" role="button">
+                <i class="bi bi-truck"></i> Wydania
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MAG 2 -->
+      <div class="col warehouse-card" role="listitem" data-name="MAG 2" data-location="Łódź" data-ops="24" data-waiting="122"
+        data-late="146" data-backorders="26">
+        <div class="tile h-100 p-0 overflow-hidden">
+          <div class="p-3 p-sm-4">
+            <div class="d-flex align-items-center justify-content-between gap-3">
+              <h2 class="h5 mb-0 text-truncate">
+                <i class="bi bi-box-seam me-2 opacity-75" aria-hidden="true"></i>
+                <span class="warehouse-name">MAG 2</span>
+              </h2>
+              <span class="badge rounded-pill bg-success-subtle text-success-emphasis px-3 py-2">
+                <span class="fw-semibold ops">24</span> DO OBSŁUŻENIA
+              </span>
+            </div>
+
+            <div class="small text-secondary mt-1">
+              <i class="bi bi-geo-alt me-1" aria-hidden="true"></i>
+              <span class="warehouse-location">Łódź</span>
+            </div>
+
+            <hr class="border-secondary-subtle my-3">
+
+            <div class="d-flex flex-wrap gap-2">
+              <span class="badge bg-warning-subtle text-warning-emphasis">
+                Oczekujące: <span class="waiting">122</span>
+              </span>
+              <span class="badge bg-danger-subtle text-danger-emphasis">
+                Opóźnione: <span class="late">146</span>
+              </span>
+              <span class="badge bg-primary-subtle text-primary-emphasis">
+                Zaległe zamówienia: <span class="backorders">26</span>
+              </span>
+            </div>
+          </div>
+
+          <div class="px-3 px-sm-4 pb-3 pb-sm-4">
+            <div class="progress bg-transparent border border-secondary-subtle rounded-2" style="height: 10px;">
+              <div class="progress-bar bg-danger" role="progressbar" style="--w: 0;"
+                aria-label="Udział opóźnień" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+            </div>
+            <p class="small text-secondary mt-2 mb-0">
+              Udział opóźnień w aktywnych sprawach:
+              <span class="late-share fw-semibold">0%</span>
+            </p>
+          </div>
+
+          <div class="p-3 p-sm-4 pt-0">
+            <div class="d-flex gap-2">
+              <a href="#" class="btn btn-outline-light flex-fill border-secondary-subtle ops-btn" role="button">
+                <i class="bi bi-box-arrow-in-down"></i> Przyjęcia
+              </a>
+              <a href="#" class="btn btn-outline-light flex-fill border-secondary-subtle ops-btn" role="button">
+                <i class="bi bi-arrow-left-right"></i> Transfery
+              </a>
+              <a href="#" class="btn btn-outline-light flex-fill border-secondary-subtle ops-btn" role="button">
+                <i class="bi bi-truck"></i> Wydania
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MAG 3 -->
+      <div class="col warehouse-card" role="listitem" data-name="MAG 3" data-location="Berlin" data-ops="11503" data-waiting="14371"
+        data-late="24102" data-backorders="3">
+        <div class="tile h-100 p-0 overflow-hidden">
+          <div class="p-3 p-sm-4">
+            <div class="d-flex align-items-center justify-content-between gap-3">
+              <h2 class="h5 mb-0 text-truncate">
+                <i class="bi bi-box-seam me-2 opacity-75" aria-hidden="true"></i>
+                <span class="warehouse-name">MAG 3</span>
+              </h2>
+              <span class="badge rounded-pill bg-success-subtle text-success-emphasis px-3 py-2">
+                <span class="fw-semibold ops">11 503</span> DO OBSŁUŻENIA
+              </span>
+            </div>
+
+            <div class="small text-secondary mt-1">
+              <i class="bi bi-geo-alt me-1" aria-hidden="true"></i>
+              <span class="warehouse-location">Berlin</span>
+            </div>
+
+            <hr class="border-secondary-subtle my-3">
+
+            <div class="d-flex flex-wrap gap-2">
+              <span class="badge bg-warning-subtle text-warning-emphasis">
+                Oczekujące: <span class="waiting">14 371</span>
+              </span>
+              <span class="badge bg-danger-subtle text-danger-emphasis">
+                Opóźnione: <span class="late">24 102</span>
+              </span>
+              <span class="badge bg-primary-subtle text-primary-emphasis">
+                Zaległe zamówienia: <span class="backorders">3</span>
+              </span>
+            </div>
+          </div>
+
+          <div class="px-3 px-sm-4 pb-3 pb-sm-4">
+            <div class="progress bg-transparent border border-secondary-subtle rounded-2" style="height: 10px;">
+              <div class="progress-bar bg-danger" role="progressbar" style="--w: 0;"
+                aria-label="Udział opóźnień" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+            </div>
+            <p class="small text-secondary mt-2 mb-0">
+              Udział opóźnień w aktywnych sprawach:
+              <span class="late-share fw-semibold">0%</span>
+            </p>
+          </div>
+
+          <div class="p-3 p-sm-4 pt-0">
+            <div class="d-flex gap-2">
+              <a href="#" class="btn btn-outline-light flex-fill border-secondary-subtle ops-btn" role="button">
+                <i class="bi bi-box-arrow-in-down"></i> Przyjęcia
+              </a>
+              <a href="#" class="btn btn-outline-light flex-fill border-secondary-subtle ops-btn" role="button">
+                <i class="bi bi-arrow-left-right"></i> Transfery
+              </a>
+              <a href="#" class="btn btn-outline-light flex-fill border-secondary-subtle ops-btn" role="button">
+                <i class="bi bi-truck"></i> Wydania
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- NOWE KAFELKI (po polsku) -->
+      <div class="col warehouse-card" role="listitem" data-name="Próbki do optyka" data-location="Warszawa" data-ops="7"
+        data-waiting="142" data-late="149" data-backorders="106">
+        <div class="tile h-100 p-0 overflow-hidden">
+          <div class="p-3 p-sm-4">
+            <div class="d-flex align-items-center justify-content-between gap-3">
+              <h2 class="h5 mb-0 text-truncate">
+                <i class="bi bi-eyeglasses me-2 opacity-75" aria-hidden="true"></i>
+                <span class="warehouse-name">Próbki do optyka</span>
+              </h2>
+              <span class="badge rounded-pill bg-success-subtle text-success-emphasis px-3 py-2">
+                <span class="fw-semibold ops">7</span> DO OBSŁUŻENIA
+              </span>
+            </div>
+
+            <div class="small text-secondary mt-1">
+              <i class="bi bi-geo-alt me-1" aria-hidden="true"></i>
+              <span class="warehouse-location">Warszawa</span>
+            </div>
+
+            <hr class="border-secondary-subtle my-3">
+
+            <div class="d-flex flex-wrap gap-2">
+              <span class="badge bg-warning-subtle text-warning-emphasis">Oczekujące: <span
+                  class="waiting">142</span></span>
+              <span class="badge bg-danger-subtle text-danger-emphasis">Opóźnione: <span class="late">149</span></span>
+              <span class="badge bg-primary-subtle text-primary-emphasis">Zaległe zamówienia: <span
+                  class="backorders">106</span></span>
+            </div>
+          </div>
+
+          <div class="px-3 px-sm-4 pb-3 pb-sm-4">
+            <div class="progress bg-transparent border border-secondary-subtle rounded-2" style="height: 10px;">
+              <div class="progress-bar bg-danger" role="progressbar" style="--w: 0;"
+                aria-label="Udział opóźnień" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+            </div>
+            <p class="small text-secondary mt-2 mb-0">
+              Udział opóźnień w aktywnych sprawach:
+              <span class="late-share fw-semibold">0%</span>
+            </p>
+          </div>
+
+          <div class="p-3 p-sm-4 pt-0">
+            <div class="d-flex gap-2">
+              <a href="#" class="btn btn-outline-light flex-fill border-secondary-subtle ops-btn" role="button">
+                <i class="bi bi-box-arrow-in-down"></i> Przyjęcia
+              </a>
+              <a href="#" class="btn btn-outline-light flex-fill border-secondary-subtle ops-btn" role="button">
+                <i class="bi bi-arrow-left-right"></i> Transfery
+              </a>
+              <a href="#" class="btn btn-outline-light flex-fill border-secondary-subtle ops-btn" role="button">
+                <i class="bi bi-truck"></i> Wydania
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col warehouse-card" role="listitem" data-name="Zwroty do Supervista" data-location="Warszawa" data-ops="5038"
+        data-waiting="25" data-late="5063" data-backorders="0">
+        <div class="tile h-100 p-0 overflow-hidden">
+          <div class="p-3 p-sm-4">
+            <div class="d-flex align-items-center justify-content-between gap-3">
+              <h2 class="h5 mb-0 text-truncate">
+                <i class="bi bi-arrow-90deg-left me-2 opacity-75" aria-hidden="true"></i>
+                <span class="warehouse-name">Zwroty do Supervista</span>
+              </h2>
+              <span class="badge rounded-pill bg-success-subtle text-success-emphasis px-3 py-2">
+                <span class="fw-semibold ops">5 038</span> DO OBSŁUŻENIA
+              </span>
+            </div>
+
+            <div class="small text-secondary mt-1">
+              <i class="bi bi-geo-alt me-1" aria-hidden="true"></i>
+              <span class="warehouse-location">Warszawa</span>
+            </div>
+
+            <hr class="border-secondary-subtle my-3">
+
+            <div class="d-flex flex-wrap gap-2">
+              <span class="badge bg-warning-subtle text-warning-emphasis">Oczekujące: <span
+                  class="waiting">25</span></span>
+              <span class="badge bg-danger-subtle text-danger-emphasis">Opóźnione: <span class="late">5
+                  063</span></span>
+              <span class="badge bg-primary-subtle text-primary-emphasis">Zaległe zamówienia: <span
+                  class="backorders">0</span></span>
+            </div>
+          </div>
+
+          <div class="px-3 px-sm-4 pb-3 pb-sm-4">
+            <div class="progress bg-transparent border border-secondary-subtle rounded-2" style="height: 10px;">
+              <div class="progress-bar bg-danger" role="progressbar" style="--w: 0;"
+                aria-label="Udział opóźnień" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+            </div>
+            <p class="small text-secondary mt-2 mb-0">
+              Udział opóźnień w aktywnych sprawach:
+              <span class="late-share fw-semibold">0%</span>
+            </p>
+          </div>
+
+          <div class="p-3 p-sm-4 pt-0">
+            <div class="d-flex gap-2">
+              <a href="#" class="btn btn-outline-light flex-fill border-secondary-subtle ops-btn" role="button">
+                <i class="bi bi-box-arrow-in-down"></i> Przyjęcia
+              </a>
+              <a href="#" class="btn btn-outline-light flex-fill border-secondary-subtle ops-btn" role="button">
+                <i class="bi bi-arrow-left-right"></i> Transfery
+              </a>
+              <a href="#" class="btn btn-outline-light flex-fill border-secondary-subtle ops-btn" role="button">
+                <i class="bi bi-truck"></i> Wydania
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col warehouse-card" role="listitem" data-name="Zwrot do lokalizacji próbek" data-location="Warszawa" data-ops="1"
+        data-waiting="0" data-late="1" data-backorders="0">
+        <div class="tile h-100 p-0 overflow-hidden">
+          <div class="p-3 p-sm-4">
+            <div class="d-flex align-items-center justify-content-between gap-3">
+              <h2 class="h5 mb-0 text-truncate">
+                <i class="bi bi-archive me-2 opacity-75" aria-hidden="true"></i>
+                <span class="warehouse-name">Zwrot do lokalizacji próbek</span>
+              </h2>
+              <span class="badge rounded-pill bg-success-subtle text-success-emphasis px-3 py-2">
+                <span class="fw-semibold ops">1</span> DO OBSŁUŻENIA
+              </span>
+            </div>
+
+            <div class="small text-secondary mt-1">
+              <i class="bi bi-geo-alt me-1" aria-hidden="true"></i>
+              <span class="warehouse-location">Warszawa</span>
+            </div>
+
+            <hr class="border-secondary-subtle my-3">
+
+            <div class="d-flex flex-wrap gap-2">
+              <span class="badge bg-warning-subtle text-warning-emphasis">Oczekujące: <span
+                  class="waiting">0</span></span>
+              <span class="badge bg-danger-subtle text-danger-emphasis">Opóźnione: <span class="late">1</span></span>
+              <span class="badge bg-primary-subtle text-primary-emphasis">Zaległe zamówienia: <span
+                  class="backorders">0</span></span>
+            </div>
+          </div>
+
+          <div class="px-3 px-sm-4 pb-3 pb-sm-4">
+            <div class="progress bg-transparent border border-secondary-subtle rounded-2" style="height: 10px;">
+              <div class="progress-bar bg-danger" role="progressbar" style="--w: 0;"
+                aria-label="Udział opóźnień" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+            </div>
+            <p class="small text-secondary mt-2 mb-0">
+              Udział opóźnień w aktywnych sprawach:
+              <span class="late-share fw-semibold">0%</span>
+            </p>
+          </div>
+
+          <div class="p-3 p-sm-4 pt-0">
+            <div class="d-flex gap-2">
+              <a href="#" class="btn btn-outline-light flex-fill border-secondary-subtle ops-btn" role="button">
+                <i class="bi bi-box-arrow-in-down"></i> Przyjęcia
+              </a>
+              <a href="#" class="btn btn-outline-light flex-fill border-secondary-subtle ops-btn" role="button">
+                <i class="bi bi-arrow-left-right"></i> Transfery
+              </a>
+              <a href="#" class="btn btn-outline-light flex-fill border-secondary-subtle ops-btn" role="button">
+                <i class="bi bi-truck"></i> Wydania
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- *** LABY NA KOŃCU *** -->
+      <div class="col warehouse-card" role="listitem" data-name="LAB" data-location="Warszawa" data-ops="0" data-waiting="0"
+        data-late="0" data-backorders="0">
+        <div class="tile h-100 p-0 overflow-hidden">
+          <div class="p-3 p-sm-4">
+            <div class="d-flex align-items-center justify-content-between gap-3">
+              <h2 class="h5 mb-0 text-truncate">
+                <i class="bi bi-flask me-2 opacity-75" aria-hidden="true"></i>
+                <i class="bi bi-hammer me-2 opacity-75" aria-hidden="true"></i>
+                <span class="warehouse-name">LAB</span>
+              </h2>
+              <span class="badge rounded-pill bg-success-subtle text-success-emphasis px-3 py-2">
+                <span class="fw-semibold ops">0</span> DO OBSŁUŻENIA
+              </span>
+            </div>
+
+            <div class="small text-secondary mt-1">
+              <i class="bi bi-geo-alt me-1" aria-hidden="true"></i>
+              <span class="warehouse-location">Warszawa</span>
+            </div>
+
+            <hr class="border-secondary-subtle my-3">
+
+            <div class="d-flex flex-wrap gap-2">
+              <span class="badge bg-warning-subtle text-warning-emphasis">
+                Oczekujące: <span class="waiting">0</span>
+              </span>
+              <span class="badge bg-danger-subtle text-danger-emphasis">
+                Opóźnione: <span class="late">0</span>
+              </span>
+              <span class="badge bg-primary-subtle text-primary-emphasis">
+                Zaległe zamówienia: <span class="backorders">0</span>
+              </span>
+            </div>
+          </div>
+
+          <div class="px-3 px-sm-4 pb-3 pb-sm-4">
+            <div class="progress bg-transparent border border-secondary-subtle rounded-2" style="height: 10px;">
+              <div class="progress-bar bg-danger" role="progressbar" style="--w: 0;"
+                aria-label="Udział opóźnień" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+            </div>
+            <p class="small text-secondary mt-2 mb-0">
+              Udział opóźnień w aktywnych sprawach:
+              <span class="late-share fw-semibold">0%</span>
+            </p>
+          </div>
+
+          <div class="p-3 p-sm-4 pt-0">
+            <div class="d-flex gap-2">
+              <a href="#" class="btn btn-outline-light flex-fill border-secondary-subtle ops-btn" role="button">
+                <i class="bi bi-box-arrow-in-down"></i> Przyjęcia
+              </a>
+              <a href="#" class="btn btn-outline-light flex-fill border-secondary-subtle ops-btn" role="button">
+                <i class="bi bi-arrow-left-right"></i> Transfery
+              </a>
+              <a href="#" class="btn btn-outline-light flex-fill border-secondary-subtle ops-btn" role="button">
+                <i class="bi bi-truck"></i> Wydania
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col warehouse-card" role="listitem" data-name="LAB Berlin" data-location="Berlin" data-ops="0" data-waiting="0"
+        data-late="0" data-backorders="0">
+        <div class="tile h-100 p-0 overflow-hidden">
+          <div class="p-3 p-sm-4">
+            <div class="d-flex align-items-center justify-content-between gap-3">
+              <h2 class="h5 mb-0 text-truncate">
+                <i class="bi bi-flask me-2 opacity-75" aria-hidden="true"></i>
+                <i class="bi bi-hammer me-2 opacity-75" aria-hidden="true"></i>
+                <span class="warehouse-name">LAB Berlin</span>
+              </h2>
+              <span class="badge rounded-pill bg-success-subtle text-success-emphasis px-3 py-2">
+                <span class="fw-semibold ops">0</span> DO OBSŁUŻENIA
+              </span>
+            </div>
+
+            <div class="small text-secondary mt-1">
+              <i class="bi bi-geo-alt me-1" aria-hidden="true"></i>
+              <span class="warehouse-location">Berlin</span>
+            </div>
+
+            <hr class="border-secondary-subtle my-3">
+
+            <div class="d-flex flex-wrap gap-2">
+              <span class="badge bg-warning-subtle text-warning-emphasis">Oczekujące: <span
+                  class="waiting">0</span></span>
+              <span class="badge bg-danger-subtle text-danger-emphasis">Opóźnione: <span class="late">0</span></span>
+              <span class="badge bg-primary-subtle text-primary-emphasis">Zaległe zamówienia: <span
+                  class="backorders">0</span></span>
+            </div>
+          </div>
+
+          <div class="px-3 px-sm-4 pb-3 pb-sm-4">
+            <div class="progress bg-transparent border border-secondary-subtle rounded-2" style="height: 10px;">
+              <div class="progress-bar bg-danger" role="progressbar" style="--w: 0;"
+                aria-label="Udział opóźnień" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+            </div>
+            <p class="small text-secondary mt-2 mb-0">
+              Udział opóźnień w aktywnych sprawach:
+              <span class="late-share fw-semibold">0%</span>
+            </p>
+          </div>
+
+          <div class="p-3 p-sm-4 pt-0">
+            <div class="d-flex gap-2">
+              <a href="#" class="btn btn-outline-light flex-fill border-secondary-subtle ops-btn" role="button">
+                <i class="bi bi-box-arrow-in-down"></i> Przyjęcia
+              </a>
+              <a href="#" class="btn btn-outline-light flex-fill border-secondary-subtle ops-btn" role="button">
+                <i class="bi bi-arrow-left-right"></i> Transfery
+              </a>
+              <a href="#" class="btn btn-outline-light flex-fill border-secondary-subtle ops-btn" role="button">
+                <i class="bi bi-truck"></i> Wydania
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- /LABY NA KOŃCU -->
+
+    </div>
+  </div>
+
+  <p class="text-center text-secondary mt-4 mb-0 small">
+    Python &amp; Django · UI: Bootstrap 5.3 · &copy; 2025
+  </p>
+</section>
+
+<!-- Skrypty: tooltips + filtrowanie/sortowanie -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // Tooltips
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el, { trigger: 'hover focus' }));
+
+    // Elementy
+    const grid = document.getElementById('warehouseGrid');
+    const cards = Array.from(grid.querySelectorAll('.warehouse-card'));
+    const searchInput = document.getElementById('searchWarehouses');
+    const statusFilter = document.getElementById('statusFilter');
+    const sortBy = document.getElementById('sortBy');
+    const resetBtn = document.getElementById('resetFilters');
+    const resultsCount = document.getElementById('resultsCount');
+
+    // Formatowanie liczb (PL)
+    const nf = new Intl.NumberFormat('pl-PL');
+    const toInt = (v) => {
+      if (typeof v === 'number') return v;
+      return Number(String(v ?? '0').replace(/\s/g, '').replace(',', '.')) || 0;
+    };
+
+    // Normalizacja do wyszukiwania: usuwanie znaków diakrytycznych + mapowanie "ł/Ł" + lower-case
+    const normalizeForSearch = (s) => {
+      if (!s) return '';
+      return s
+        .normalize('NFD')                 // rozbij na znaki podstawowe + łączące
+        .replace(/[\u0300-\u036f]/g, '')  // usuń znaki łączące (akcenty, ogonki itp.)
+        .replace(/ł/g, 'l')               // specjalne mapowanie dla PL
+        .replace(/Ł/g, 'L')
+        .toLowerCase();
+    };
+
+    // Zcache’uj dane kart (mniej parsowania i reflow)
+    const meta = cards.map(card => {
+      const name = (card.dataset.name || '').trim();
+      const location = (card.dataset.location || '').trim();
+      const data = {
+        el: card,
+        name,
+        location,
+        nameNorm: normalizeForSearch(name),
+        locationNorm: normalizeForSearch(location),
+        ops: toInt(card.dataset.ops),
+        waiting: toInt(card.dataset.waiting),
+        late: toInt(card.dataset.late),
+        backorders: toInt(card.dataset.backorders),
+        bar: card.querySelector('.progress-bar'),
+        lateShareEl: card.querySelector('.late-share'),
+      };
+      data.active = data.waiting + data.late + data.backorders;
+      return data;
+    });
+
+    // Sformatuj widoczne liczby tylko raz
+    cards.forEach(card => {
+      const ops = card.querySelector('.ops');
+      const waiting = card.querySelector('.waiting');
+      const late = card.querySelector('.late');
+      const back = card.querySelector('.backorders');
+      if (ops) ops.textContent = nf.format(toInt(ops.textContent));
+      if (waiting) waiting.textContent = nf.format(toInt(waiting.textContent));
+      if (late) late.textContent = nf.format(toInt(late.textContent));
+      if (back) back.textContent = nf.format(toInt(back.textContent));
+    });
+
+    // Liczenie udziału opóźnień (spójne i tylko w JS)
+    function updateLateShares() {
+      meta.forEach(m => {
+        const pct = m.active ? Math.min(100, (m.late / m.active) * 100) : 0;
+        if (m.bar) {
+          m.bar.style.setProperty('--w', pct.toFixed(2));
+          m.bar.setAttribute('aria-valuenow', pct.toFixed(1));
+        }
+        if (m.lateShareEl) {
+          m.lateShareEl.textContent = `${pct.toFixed(1)}%`;
+        }
+      });
+    }
+
+    // Filtrowanie (bez polskich znaków)
+    function applyFilters() {
+      const qNorm = normalizeForSearch(searchInput.value.trim());
+      const status = statusFilter.value;
+
+      let visible = 0;
+
+      meta.forEach(m => {
+        let ok = true;
+
+        if (qNorm) {
+          ok = m.nameNorm.includes(qNorm) || m.locationNorm.includes(qNorm);
+        }
+
+        if (ok && status !== 'all') {
+          if (status === 'to-process') ok = m.ops > 0;
+          else if (status === 'waiting') ok = m.waiting > 0;
+          else if (status === 'late') ok = m.late > 0;
+          else if (status === 'backorders') ok = m.backorders > 0;
+        }
+
+        m.el.classList.toggle('d-none', !ok);
+        if (ok) visible += 1;
+      });
+
+      resultsCount.textContent = `Wyniki: ${nf.format(visible)} / ${nf.format(meta.length)}`;
+
+      applySort();
+    }
+
+    // Sortowanie (PL-aware + natural order)
+    function applySort() {
+      const value = sortBy.value;
+      const items = meta.filter(m => !m.el.classList.contains('d-none'));
+
+      // Collator dla języka polskiego: ignoruje wielkość liter, uwzględnia diakrytyki i sortuje liczby naturalnie
+      const collator = new Intl.Collator('pl', { sensitivity: 'base', numeric: true });
+
+      items.sort((a, b) => {
+        switch (value) {
+          case 'name':
+            return collator.compare(a.name, b.name);
+          case '-name':
+            return collator.compare(b.name, a.name);
+          case 'ops':
+            return a.ops - b.ops;
+          case '-ops':
+            return b.ops - a.ops;
+          case 'location': {
+            const byLoc = collator.compare(a.location, b.location);
+            return byLoc !== 0 ? byLoc : collator.compare(a.name, b.name);
+          }
+          default:
+            return 0;
+        }
+      });
+
+      const frag = document.createDocumentFragment();
+      items.forEach(m => frag.appendChild(m.el));
+      grid.appendChild(frag);
+    }
+
+    // Debounce dla wyszukiwania
+    function debounce(fn, ms) {
+      let t;
+      return (...args) => { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), ms); };
+    }
+
+    // Reset
+    resetBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      statusFilter.value = 'all';
+      sortBy.value = 'name';
+      // Reflow po kolejności bazowej (alfabetycznie)
+      applyFilters();
+      // Przywróć fokus do UX
+      setTimeout(() => searchInput.focus(), 0);
+    });
+
+    // Zdarzenia
+    searchInput.addEventListener('input', debounce(applyFilters, 150));
+    statusFilter.addEventListener('input', applyFilters);
+    sortBy.addEventListener('input', applyFilters);
+
+    // Inicjalizacja
+    updateLateShares();
+    applyFilters();
+  });
+</script>
+{% endblock content %}
