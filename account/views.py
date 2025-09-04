@@ -5,6 +5,10 @@ from django.contrib import messages
 from django.urls import reverse
 
 #@login_required
+def warehouse(request):
+    return render(request, "account/warehouse.html")
+    
+#@login_required
 def dashboard(request):
     # Placeholdery do UI – podłączysz do modeli, gdy będą gotowe
     context = {
