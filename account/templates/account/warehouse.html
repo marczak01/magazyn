@@ -63,7 +63,7 @@
     <div class="glass rounded-3 p-3 p-md-4 animate-fade">
       <form class="row g-3 align-items-end" id="filtersForm" onsubmit="return false;" role="search" aria-label="Filtry magazynów">
         <div class="col-12 col-md-4">
-          <label for="searchWarehouses" class="form-label small text-secondary">Szukaj magazynu</label>
+          <label for="searchWarehouses" class="form-label text-secondary fs-5">Szukaj magazynu</label>
           <div class="input-group">
             <span class="input-group-text"><i class="bi bi-search" aria-hidden="true"></i></span>
             <input type="search" id="searchWarehouses" class="form-control" placeholder="np. MAG 1, Warszawa…"
@@ -72,7 +72,7 @@
         </div>
 
         <div class="col-6 col-md-3">
-          <label for="statusFilter" class="form-label small text-secondary">Filtr statusów</label>
+          <label for="statusFilter" class="form-label text-secondary fs-5">Filtr statusów</label>
           <select id="statusFilter" class="form-select">
             <option value="all" selected>Wszystkie</option>
             <option value="to-process">Do obsłużenia</option>
@@ -83,7 +83,7 @@
         </div>
 
         <div class="col-6 col-md-3">
-          <label for="sortBy" class="form-label small text-secondary">Sortuj</label>
+          <label for="sortBy" class="form-label text-secondary fs-5">Sortuj</label>
           <select id="sortBy" class="form-select">
             <option value="name" selected>Alfabetycznie (A→Z)</option>
             <option value="-name">Alfabetycznie (Z→A)</option>
@@ -100,15 +100,15 @@
         </div>
 
         <div class="col-12">
-          <div class="d-flex align-items-center gap-2 small text-secondary">
+          <div class="d-flex align-items-center gap-2 text-secondary fs-5">
             <i class="bi bi-info-circle" aria-hidden="true"></i>
             <span>Kolory:
-              <span class="badge bg-success-subtle text-success-emphasis">DO OBSŁUŻENIA</span>,
-              <span class="badge bg-warning-subtle text-warning-emphasis">Oczekujące</span>,
-              <span class="badge bg-danger-subtle text-danger-emphasis">Opóźnione</span>,
+              <span class="badge bg-success-subtle text-success-emphasis">Do obsłużenia</span>
+              <span class="badge bg-warning-subtle text-warning-emphasis">Oczekujące</span>
+              <span class="badge bg-danger-subtle text-danger-emphasis">Opóźnione</span>
               <span class="badge bg-primary-subtle text-primary-emphasis">Zaległe zamówienia</span>
             </span>
-            <span class="ms-auto small" id="resultsCount" aria-live="polite"></span>
+            <span class="ms-auto fs-5" id="resultsCount" aria-live="polite"></span>
           </div>
         </div>
       </form>
