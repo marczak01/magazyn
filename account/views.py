@@ -3,10 +3,37 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.urls import reverse
+import random
 
 #@login_required
 def warehouse(request):
     return render(request, "account/warehouse.html")
+
+def warehouse_stock(request, slug):
+    """
+    DEMO: generujemy 30 pozycji, żeby łatwo przetestować scroll w kafelku.
+    Gdy podepniesz modele, wypełnij `stock_rows` danymi z bazy (te same klucze).
+    """
+    locations = ["WH/029114", "WH/029122", "WH/029905"]
+    stock_rows = []
+    for i in range(1, 31):
+        idx3 = f"{i:03d}"
+        stock_rows.append({
+            "name":     f"Gino Vega ALT{idx3}-C3",
+            "sku":      f"ALT{idx3}-C3",
+            "lot":      f"SN-{i:04d}",
+            "location": random.choice(locations),
+            "reserved": random.choice([0, 0, 1, 2]),           # trochę zer dla realizmu
+            "qty":      random.choice([0, 1, 2, 3, 5, 7, 8, 10, 12]),
+            "orders":   random.choice([0, 0, 0, 1, 2, 3, 5]),
+            "value":    random.choice([119, 149, 159, 179, 199, 219, 259, 269, 289, 309, 339]),
+        })
+
+    context = {
+        "warehouse_name": (slug or "MAG 1").upper(),
+        "stock_rows": stock_rows,
+    }
+    return render(request, "account/warehouse_stock.html", context)
     
 #@login_required
 def dashboard(request):

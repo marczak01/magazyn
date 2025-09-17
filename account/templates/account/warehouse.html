@@ -662,6 +662,42 @@
       return data;
     });
 
+    
+  // ➊ Prefiks URL do magazynów z namespacu Django (np. "/account/warehouses/")
+  const urlPrefix = "{% url 'account:warehouse' %}";
+
+  // ➋ Slugify z polskimi znakami
+  function slugify(s) {
+    return (s || '')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/ł/g, 'l').replace(/Ł/g, 'L')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .replace(/--+/g, '-');
+  }
+
+  const slugMap = {};
+
+  // ➌ Wstrzykujemy stretched-link do każdego kafelka .tile
+  function injectStretchedLinks() {
+    meta.forEach(m => {
+      const tile = m.el.querySelector('.tile');
+      if (!tile) return;
+      if (tile.querySelector('a.stretched-link')) return; // już wstrzyknięty
+
+      // upewnij się, że parent jest pozycjonowany (wymagane przez stretched-link)
+      tile.classList.add('position-relative');
+
+      const a = document.createElement('a');
+      a.className = 'stretched-link';
+      const slug = slugMap[m.name] || slugify(m.name);
+      a.href = urlPrefix + slug + '/';
+      a.setAttribute('aria-label', `Otwórz magazyn ${m.name}`);
+      tile.appendChild(a);
+    });
+  }
+
     // Sformatuj widoczne liczby tylko raz
     cards.forEach(card => {
       const ops = card.querySelector('.ops');
@@ -773,6 +809,7 @@
     sortBy.addEventListener('input', applyFilters);
 
     // Inicjalizacja
+    injectStretchedLinks();
     updateLateShares();
     applyFilters();
   });
