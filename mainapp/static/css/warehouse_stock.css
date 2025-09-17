@@ -1,0 +1,109 @@
+/* ====== WIDOK: warehouse_stock ====== */
+
+/* Kafelek bez hover-animacji i bez flexa z .tile */
+.tile-plain {
+  display: block;         /* wyłącza centrowanie flex z .tile */
+  width: 100%;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.12);
+  backdrop-filter: blur(6px);
+  border-radius: 1.5rem;
+  cursor: default;
+  transition: none !important;   /* żadnych efektów */
+  box-shadow: none !important;   /* >>> wyłącz cień ogólnie <<< */
+}
+.tile-plain:hover,
+.tile-plain:focus,
+.tile-plain:active {
+  transform: none !important;
+  border-color: rgba(255,255,255,.12) !important;
+  background: rgba(255,255,255,.04) !important;
+  box-shadow: none !important;   /* >>> wyłącz cień również na hover/focus <<< */
+}
+.tile-plain::after { display: none !important; }  /* wyłącza „poświatę” */
+  
+#stockViewport {
+  overflow: auto;               /* przewijanie wewnątrz listy */
+  max-height: 60vh;
+}
+
+/* Sama tabela */
+#stockTable { width: 100%; border-collapse: separate; border-spacing: 0; }
+
+/* Sticky header musi być nad tłem i mieć własne tło */
+#stockTable thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: rgba(22,22,22,.85) !important;
+  backdrop-filter: blur(6px);
+  vertical-align: middle;
+  font-weight: 700;
+  border-bottom: 1px solid rgba(255,255,255,.12);
+}
+
+/* Czytelność wierszy */
+.table-dark.table-hover tbody tr:hover { background-color: rgba(255,255,255,.06); }
+
+/* (3) Wiersz z niskim stanem – czytelny zestaw kolorów na ciemnym tle */
+.low-stock {
+  --bs-table-bg: var(--bs-danger-bg-subtle) !important;
+  --bs-table-color: var(--bs-danger-text-emphasis) !important;
+}
+
+/* Drobne wyrównania */
+#checkAll, .row-check { transform: translateY(1px); }
+#stockTable td.text-end, #stockTable th.text-end { padding-right: 1rem; }
+@media (max-width: 576px) { #stockTable td:last-child { padding-right: .5rem; } }
+
+.glass { border-radius: 1.2rem; }
+
+/* (4) Kompaktowy przycisk z trzema kropkami – mniejszy i czytelny */
+.btn-compact{
+  --bs-btn-padding-y: .15rem;
+  --bs-btn-padding-x: .35rem;
+  --bs-btn-font-size: .9rem;
+  --bs-btn-line-height: 1.1;
+  border-radius: .4rem;
+}
+
+/* Duże badge – zachowujemy kolory, zmieniamy tylko rozmiar */
+.badge-lg{
+  --bs-badge-font-size: 1.15rem; /* ~ fs-5 */
+  --bs-badge-padding-x: 1rem;
+  --bs-badge-padding-y: .6rem;
+  border-radius: .6rem;
+}
+
+/* Dropdown – jak w projekcie */
+.app-dropdown{
+  background: rgba(22,22,22,.95);
+  border: 1px solid rgba(255,255,255,.12);
+  backdrop-filter: blur(6px);
+  --bs-dropdown-min-width: 18rem;
+  --bs-dropdown-font-size: 1.05rem;
+  --bs-dropdown-padding-y: .5rem;
+  --bs-dropdown-item-padding-y: .65rem;
+  --bs-dropdown-item-padding-x: 1rem;
+  --bs-dropdown-link-color: rgba(255,255,255,.92);
+  --bs-dropdown-link-hover-bg: rgba(255,255,255,.06);
+  --bs-dropdown-border-color: rgba(255,255,255,.12);
+}
+.app-dropdown .dropdown-item{ padding: var(--bs-dropdown-item-padding-y) var(--bs-dropdown-item-padding-x); }
+.app-dropdown .dropdown-divider{ border-color: rgba(255,255,255,.12); }
+
+.btn-dark-subtle{ background:rgba(255,255,255,.06); color:#e6e6e6; }
+.btn-dark-subtle:hover{ background:rgba(255,255,255,.08); }
+
+.app-dropdown .dropdown-item .bi { font-size: 1.35rem; }
+
+/* Pasek akcji grupowych */
+.bulkbar{
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.12);
+}
+
+/* (już było) kafelek bez cienia – ważne, żeby hover nie dodawał shadowa */
+.tile-plain{ box-shadow:none !important; }
+.tile-plain:hover, .tile-plain:focus, .tile-plain:active{ box-shadow:none !important; }
+

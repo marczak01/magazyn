@@ -26,6 +26,7 @@
   
   /* 4) Ikony w przyciskach operacyjnych – lekko większe od labela */
   .ops-btn {
+    position: relative; z-index: 2; 
     display: inline-flex;
     align-items: center;
     justify-content: center;

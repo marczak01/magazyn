@@ -1,0 +1,512 @@
+{% extends "mainapp/base.html" %}
+{% load static humanize %}
+
+{% block title %}Magazyn · Lista produktów{% endblock title %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/warehouse_stock.css' %}">
+
+<section class="bg-dark text-light min-vh-100" data-bs-theme="dark">
+  <!-- Tło -->
+  <div class="position-relative">
+    <div class="position-absolute top-0 start-0 w-100 h-100 hero-bg opacity-75"></div>
+
+    <!-- Nagłówek / breadcrumbs -->
+    <div class="container position-relative py-4">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+          <nav aria-label="okruszki" class="small text-secondary mb-1">
+            <ol class="breadcrumb mb-0">
+              <li class="breadcrumb-item">
+                <a class="link-light text-decoration-none" href="{% url 'account:warehouse' %}">Magazyny</a>
+              </li>
+              <li class="breadcrumb-item active" aria-current="page">Lista produktów</li>
+            </ol>
+          </nav>
+          <h1 class="fw-bold mb-0 display-6">Magazyn: <span id="warehouseName">{{ warehouse_name|default:"MAG 1" }}</span></h1>
+          <p class="text-secondary mb-0">Przegląd stanów i zamówień dla wybranego magazynu</p>
+        </div>
+        <div class="d-none d-md-block"></div>
+      </div>
+    </div>
+  </div>
+
+<!-- Pasek narzędzi (zwijany) -->
+<div class="container position-relative">
+  <div class="d-flex justify-content-end mb-2">
+    <button
+      id="filtersToggle"
+      class="btn btn-outline-light"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#filtersCollapse"
+      aria-expanded="true"
+      aria-controls="filtersCollapse"
+      title="Pokaż/ukryj filtry (F8)"
+    >
+      <i class="bi bi-sliders"></i> Filtry <span class="text-secondary">(F8)</span>
+    </button>
+  </div>
+
+  <div id="filtersCollapse" class="collapse show">
+    <div class="glass rounded-3 p-3 p-md-4">
+      <form class="row g-3 align-items-end" id="toolbar" onsubmit="return false;" role="search" aria-label="Wyszukaj produkt">
+
+        <div class="col-12 col-md-5">
+          <label for="searchInput" class="form-label text-secondary fs-5">Szukaj produktu</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-search" aria-hidden="true"></i></span>
+            <input id="searchInput" type="search" class="form-control"
+                   placeholder="np. Gino Vega, ALT006, partia/serial…" autocomplete="off" inputmode="search"
+                   aria-describedby="resultCounter">
+          </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+          <label for="locationFilter" class="form-label text-secondary fs-5">Lokalizacja</label>
+          <select id="locationFilter" class="form-select">
+            <option value="all" selected>Wszystkie</option>
+            <option value="WH/029114">WH/029114</option>
+            <option value="WH/029122">WH/029122</option>
+            <option value="WH/029905">WH/029905</option>
+          </select>
+        </div>
+
+        <div class="col-6 col-md-2">
+          <label for="sortBy" class="form-label text-secondary fs-5">Sortuj</label>
+          <select id="sortBy" class="form-select">
+            <option value="name" selected>Nazwa (A→Z)</option>
+            <option value="-name">Nazwa (Z→A)</option>
+            <option value="-qty">Ilość malejąco</option>
+            <option value="qty">Ilość rosnąco</option>
+            <option value="-orders">Zamówienia malejąco</option>
+            <option value="orders">Zamówienia rosnąco</option>
+          </select>
+        </div>
+
+        <div class="col-12 col-md-2 d-grid">
+          <button type="reset" id="resetBtn" class="btn btn-outline-light border-secondary-subtle">
+            <i class="bi bi-arrow-counterclockwise"></i> Resetuj
+          </button>
+        </div>
+
+        <div class="col-12">
+          <div class="d-flex align-items-center gap-2 text-secondary fs-5">
+            <i class="bi bi-info-circle" aria-hidden="true"></i>
+            <span>Wiersze z niskim stanem są podświetlone czytelnym kolorem.</span>
+            <span id="resultCounter" class="ms-auto"></span>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+  <!-- KPI nad listą -->
+  <div class="container mt-3">
+    <div class="d-flex justify-content-end gap-2">
+      <span class="badge bg-success-subtle text-success-emphasis badge-lg">
+        <i class="bi bi-box-seam me-1"></i> <span id="kpiProducts">–</span> produktów
+      </span>
+      <span class="badge bg-primary-subtle text-primary-emphasis badge-lg">
+        <i class="bi bi-receipt me-1"></i> <span id="kpiOrders">–</span> zamówień
+      </span>
+    </div>
+  </div>
+
+  <!-- Pasek akcji grupowych – font jak KPI -->
+  <div class="container mt-3">
+    <div id="bulkBar" class="bulkbar glass rounded-3 px-3 py-2 fs-5 d-none">
+      <div class="d-flex align-items-center flex-wrap gap-2 w-100">
+        <span class="badge bg-light-subtle text-light-emphasis badge-lg">
+          Zaznaczone: <span id="selectedCount">0</span>
+        </span>
+
+        <div class="vr text-secondary mx-1 d-none d-sm-block"></div>
+
+        <button type="button" class="btn btn-outline-light" id="bulkEditQty">
+          <i class="bi bi-pencil-square"></i> Zmień ilość
+        </button>
+        <button type="button" class="btn btn-outline-light" id="bulkReserve">
+          <i class="bi bi-lock"></i> Zarezerwuj
+        </button>
+        <button type="button" class="btn btn-outline-light" id="bulkMove">
+          <i class="bi bi-arrow-left-right"></i> Przenieś
+        </button>
+        <button type="button" class="btn btn-outline-danger ms-auto" id="bulkDelete">
+          <i class="bi bi-trash3"></i> Usuń wybrane
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabela produktów: stały blok z wewnętrznym scroll -->
+  <div class="container py-3">
+    <div class="tile tile-plain p-0 overflow-hidden">
+      <div id="stockViewport" class="stock-viewport">
+        <div class="table-responsive h-100">
+          <table id="stockTable" class="table table-dark table-hover align-middle mb-0">
+            <thead class="table-dark position-sticky top-0" style="z-index:2;">
+              <tr class="border-secondary-subtle">
+                <th style="width:50px;">
+                  <input class="form-check-input" type="checkbox" id="checkAll" aria-label="Zaznacz wszystkie">
+                </th>
+                <th scope="col">Produkt</th>
+                <th scope="col" class="d-none d-md-table-cell">Partia / numer seryjny</th>
+                <th scope="col">Lokalizacja</th>
+                <th scope="col" class="text-end d-none d-lg-table-cell">Zarezerwowane</th>
+                <th scope="col" class="text-end">Ilość na stanie</th>
+                <th scope="col" class="text-end d-none d-sm-table-cell">Cena jednostkowa</th>
+                <th scope="col" class="text-end">Zamówienia złożone</th>
+              </tr>
+            </thead>
+
+            <tbody id="tableBody">
+              {% for r in stock_rows %}
+              <tr
+                data-name="{{ r.name }}"
+                data-sku="{{ r.sku }}"
+                data-lot="{{ r.lot }}"
+                data-location="{{ r.location }}"
+                data-qty="{{ r.qty }}"
+                data-reserved="{{ r.reserved }}"
+                data-orders="{{ r.orders }}"
+                data-value="{{ r.value }}"
+              >
+                <td><input class="form-check-input row-check" type="checkbox" aria-label="Zaznacz"></td>
+
+                <td>
+                  <div class="fw-semibold text-truncate">{{ r.name }}</div>
+                  <div class="small text-secondary">Kod: <code class="text-light">{{ r.sku }}</code></div>
+                </td>
+
+                <td class="d-none d-md-table-cell">{{ r.lot }}</td>
+                <td>{{ r.location }}</td>
+
+                <td class="text-end d-none d-lg-table-cell">{{ r.reserved }}</td>
+                <td class="text-end" data-type="qty">{{ r.qty }}</td>
+                <td class="text-end d-none d-sm-table-cell" data-type="money">{{ r.value }}</td>
+                <td class="text-end">{{ r.orders }}</td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="8" class="text-center text-secondary py-5">Brak produktów w tym magazynie.</td></tr>
+              {% endfor %}
+            </tbody>
+
+          </table>
+        </div>
+      </div>
+      <!-- /#stockViewport -->
+    </div>
+  </div>
+
+  <p class="text-center text-secondary mt-4 mb-0 small">
+    Python &amp; Django · UI: Bootstrap 5.3 · © 2025
+  </p>
+</section>
+
+<!-- Offcanvas: Zmień ilość (obsługuje 1 lub wiele pozycji) -->
+<div class="offcanvas offcanvas-end text-bg-dark" tabindex="-1" id="offcanvasQty" aria-labelledby="offcanvasQtyLabel">
+  <div class="offcanvas-header border-bottom border-secondary-subtle">
+    <h5 class="offcanvas-title" id="offcanvasQtyLabel"><i class="bi bi-pencil-square me-2"></i>Zmień ilość</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Zamknij"></button>
+  </div>
+  <div class="offcanvas-body">
+    <form id="qtyForm" onsubmit="return false;">
+      <div class="mb-3">
+        <label class="form-label">Produkt(y)</label>
+        <input type="text" class="form-control" id="qtyProduct" readonly>
+        <div class="form-text">Kody: <code id="qtySku"></code></div>
+      </div>
+      <div class="row g-3 align-items-end">
+        <div class="col-6" id="qtyCurrentWrap">
+          <label for="qtyCurrent" class="form-label">Aktualna ilość</label>
+          <input type="number" class="form-control" id="qtyCurrent" readonly>
+        </div>
+        <div class="col-6">
+          <label for="qtyNew" class="form-label">Nowa ilość</label>
+          <input type="number" class="form-control" id="qtyNew" min="0" step="1" required>
+          <div class="form-text">Ustaw taką samą ilość dla wszystkich zaznaczonych.</div>
+        </div>
+      </div>
+      <div class="mt-4 d-grid">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check2"></i> Zapisz zmianę</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Skrypty strony -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const nf = new Intl.NumberFormat('pl-PL');
+  const collator = new Intl.Collator('pl', { sensitivity: 'base', numeric: true });
+
+  const viewportEl = document.getElementById('stockViewport');
+  const tableBody  = document.getElementById('tableBody');
+  const rows       = Array.from(tableBody.querySelectorAll('tr'));
+  const searchInput = document.getElementById('searchInput');
+  const locationFilter = document.getElementById('locationFilter');
+  const sortBy = document.getElementById('sortBy');
+  const resetBtn = document.getElementById('resetBtn');
+  const checkAll = document.getElementById('checkAll');
+  const resultCounter = document.getElementById('resultCounter');
+
+    // === Toggle filtrów: F8 i "/" ===
+    const filtersCollapseEl = document.getElementById('filtersCollapse');
+  const filtersToggleBtn = document.getElementById('filtersToggle');
+  const filtersCollapse = new bootstrap.Collapse(filtersCollapseEl, { toggle: false });
+
+  function setFiltersExpanded(expanded) {
+    if (expanded) { filtersCollapse.show(); }
+    else { filtersCollapse.hide(); }
+    filtersToggleBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    try { localStorage.setItem('wh.filtersExpanded', expanded ? '1' : '0'); } catch {}
+    if (expanded) setTimeout(() => searchInput?.focus(), 120);
+  }
+
+  // przywróć zapamiętany stan
+  try {
+    const saved = localStorage.getItem('wh.filtersExpanded');
+    if (saved === '0') setFiltersExpanded(false);
+  } catch {}
+
+  // aktualizuj atrybut po animacji
+  filtersCollapseEl.addEventListener('shown.bs.collapse', () => filtersToggleBtn.setAttribute('aria-expanded', 'true'));
+  filtersCollapseEl.addEventListener('hidden.bs.collapse', () => filtersToggleBtn.setAttribute('aria-expanded', 'false'));
+
+  // skróty: F8 = toggle; "/" = pokaż + fokus (gdy nie piszemy już w input/textarea)
+  document.addEventListener('keydown', (e) => {
+    const tag = (document.activeElement?.tagName || '').toLowerCase();
+    const typing = tag === 'input' || tag === 'textarea';
+
+    if (e.key === 'F8') {
+      e.preventDefault();
+      const isExpanded = filtersToggleBtn.getAttribute('aria-expanded') === 'true';
+      setFiltersExpanded(!isExpanded);
+    }
+    if (e.key === '/' && !typing) {
+      e.preventDefault();
+      setFiltersExpanded(true);
+    }
+  });
+
+
+  // Pasek akcji
+  const bulkBar = document.getElementById('bulkBar');
+  const selectedCountEl = document.getElementById('selectedCount');
+  const bulkEditQty  = document.getElementById('bulkEditQty');
+  const bulkReserve  = document.getElementById('bulkReserve');
+  const bulkMove     = document.getElementById('bulkMove');
+  const bulkDelete   = document.getElementById('bulkDelete');
+
+  // Offcanvas "Zmień ilość"
+  const offcanvas = new bootstrap.Offcanvas('#offcanvasQty');
+  const qtyProduct = document.getElementById('qtyProduct');
+  const qtySku = document.getElementById('qtySku');
+  const qtyCurrent = document.getElementById('qtyCurrent');
+  const qtyCurrentWrap = document.getElementById('qtyCurrentWrap');
+  const qtyNew = document.getElementById('qtyNew');
+  const qtyForm = document.getElementById('qtyForm');
+
+  function sizeStockViewport() {
+    if (!viewportEl) return;
+    const top = viewportEl.getBoundingClientRect().top;
+    const bottomPadding = 24;
+    const h = Math.max(360, Math.floor(window.innerHeight - top - bottomPadding));
+    viewportEl.style.height = h + 'px';
+  }
+  sizeStockViewport();
+  window.addEventListener('resize', sizeStockViewport);
+
+  // KPI (nad listą)
+  function updateKpi() {
+    const products = rows.length;
+    const orders = rows.reduce((a, r) => a + (+r.dataset.orders || 0), 0);
+    document.getElementById('kpiProducts').textContent = nf.format(products);
+    document.getElementById('kpiOrders').textContent = nf.format(orders);
+  }
+  updateKpi();
+
+  // Formatowanie liczb
+  function formatRowNumbers(r){
+    r.querySelectorAll('td[data-type="qty"]').forEach(td => {
+      const raw = (r.dataset.qty ?? td.textContent).toString().trim().replace(/\s/g, '').replace(',', '.');
+      const n = Number(raw);
+      if (!isNaN(n)) td.textContent = nf.format(n);
+    });
+    r.querySelectorAll('td[data-type="money"]').forEach(td => {
+      const src = (r.dataset.value ?? td.textContent).toString();
+      const raw = src.trim().replace(/\s/g, '').replace(',', '.');
+      const n = Number(raw);
+      if (!isNaN(n)) td.textContent = nf.format(n) + ' zł';
+    });
+  }
+  rows.forEach(formatRowNumbers);
+
+  // Niskie stany
+  function markLowStock() {
+    rows.forEach(r => r.classList.toggle('low-stock', (+r.dataset.qty || 0) <= 1));
+  }
+
+  // === SELEKCJA ===
+  function getSelectedRows(){
+    return rows.filter(r => r.querySelector('.row-check')?.checked);
+  }
+  function updateBulkBar(){
+    const selected = getSelectedRows();
+    const n = selected.length;
+    selectedCountEl.textContent = nf.format(n);
+    bulkBar.classList.toggle('d-none', n === 0);
+
+    // stan tri-state dla "checkAll" (widoczne wiersze)
+    const visible = rows.filter(r => !r.classList.contains('d-none'));
+    const visibleChecks = visible.map(r => r.querySelector('.row-check'));
+    const checkedVisible = visibleChecks.filter(cb => cb && cb.checked).length;
+    if (checkedVisible === 0)      { checkAll.checked = false; checkAll.indeterminate = false; }
+    else if (checkedVisible === visibleChecks.length) { checkAll.checked = true;  checkAll.indeterminate = false; }
+    else                           { checkAll.checked = false; checkAll.indeterminate = true; }
+  }
+
+  // kliknięcie w wiersz = przełącz checkbox
+  tableBody.addEventListener('click', (e) => {
+    if (e.target.closest('button, a, input, label, code')) return;
+    const tr = e.target.closest('tr'); if (!tr) return;
+    const cb = tr.querySelector('.row-check'); if (!cb) return;
+    cb.checked = !cb.checked;
+    updateBulkBar();
+  });
+  tableBody.addEventListener('change', (e) => {
+    if (e.target.classList.contains('row-check')) updateBulkBar();
+  });
+
+  // Zaznacz wszystkie (tylko widoczne)
+  checkAll.addEventListener('change', () => {
+    rows.filter(r => !r.classList.contains('d-none')).forEach(r => {
+      const cb = r.querySelector('.row-check'); if (cb) cb.checked = checkAll.checked;
+    });
+    updateBulkBar();
+  });
+
+  // Wyszukiwanie / filtrowanie
+  const norm = s => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ł/g,'l').replace(/Ł/g,'L').toLowerCase().trim();
+  function applyFilters() {
+    const q = norm(searchInput.value);
+    const loc = locationFilter.value;
+    let visible = 0;
+
+    rows.forEach(r => {
+      const name = norm(r.dataset.name);
+      const sku  = norm(r.dataset.sku);
+      const lot  = norm(r.dataset.lot);
+      const location = r.dataset.location || '';
+      let ok = true;
+
+      if (q) ok = name.includes(q) || sku.includes(q) || lot.includes(q);
+      if (ok && loc !== 'all') ok = location === loc;
+
+      r.classList.toggle('d-none', !ok);
+      if (ok) visible++;
+    });
+
+    resultCounter.textContent = `Wyniki: ${nf.format(visible)} / ${nf.format(rows.length)}`;
+    applySort();
+    updateBulkBar();
+  }
+
+  function applySort() {
+    const v = sortBy.value;
+    const visible = rows.filter(r => !r.classList.contains('d-none'));
+    visible.sort((a,b) => {
+      if (v === 'name' || v === '-name') {
+        const an = a.dataset.name || '', bn = b.dataset.name || '';
+        return v === 'name' ? collator.compare(an,bn) : collator.compare(bn,an);
+      }
+      if (v === 'qty' || v === '-qty') {
+        const diff = (+a.dataset.qty||0) - (+b.dataset.qty||0);
+        return v === 'qty' ? diff : -diff;
+      }
+      if (v === 'orders' || v === '-orders') {
+        const diff = (+a.dataset.orders||0) - (+b.dataset.orders||0);
+        return v === 'orders' ? diff : -diff;
+      }
+      return 0;
+    });
+    const frag = document.createDocumentFragment();
+    visible.forEach(r => frag.appendChild(r));
+    tableBody.appendChild(frag);
+  }
+
+  // Reset
+  resetBtn.addEventListener('click', () => {
+    searchInput.value = '';
+    locationFilter.value = 'all';
+    sortBy.value = 'name';
+    checkAll.checked = false;
+    checkAll.indeterminate = false;
+    rows.forEach(r => { const cb = r.querySelector('.row-check'); if (cb) cb.checked = false; });
+    setTimeout(() => searchInput.focus(), 0);
+    applyFilters();
+  });
+
+  // Debounce
+  const debounce = (fn, ms) => { let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn.apply(this,args), ms); }; };
+  searchInput.addEventListener('input', debounce(applyFilters, 150));
+  locationFilter.addEventListener('input', applyFilters);
+  sortBy.addEventListener('input', applyFilters);
+
+  // Akcje grupowe (demo)
+  bulkEditQty.addEventListener('click', () => {
+    const sel = getSelectedRows(); if (sel.length === 0) return;
+    if (sel.length === 1) {
+      const tr = sel[0];
+      qtyProduct.value = tr.dataset.name || '';
+      qtySku.textContent = tr.dataset.sku || '';
+      qtyCurrent.value = tr.dataset.qty || 0;
+      qtyCurrentWrap.classList.remove('d-none');
+    } else {
+      qtyProduct.value = `(${nf.format(sel.length)} pozycji)`;
+      qtySku.textContent = sel.map(r => r.dataset.sku).slice(0,5).join(', ') + (sel.length > 5 ? ', …' : '');
+      qtyCurrentWrap.classList.add('d-none');
+    }
+    qtyNew.value = '';
+    offcanvas.show();
+  });
+  bulkReserve.addEventListener('click', () => {
+    const sel = getSelectedRows(); if (sel.length === 0) return;
+    alert(`(demo) Rezerwacja dla: ${sel.map(r => r.dataset.sku).join(', ')}`);
+  });
+  bulkMove.addEventListener('click', () => {
+    const sel = getSelectedRows(); if (sel.length === 0) return;
+    alert(`(demo) Przenieś pozycje: ${sel.map(r => r.dataset.sku).join(', ')}`);
+  });
+  bulkDelete.addEventListener('click', () => {
+    const sel = getSelectedRows(); if (sel.length === 0) return;
+    if (!confirm(`Usunąć ${nf.format(sel.length)} zaznaczone pozycje?`)) return;
+    sel.forEach(tr => tr.remove());
+    for (let i = rows.length - 1; i >= 0; i--) if (!document.body.contains(rows[i])) rows.splice(i, 1);
+    updateKpi(); applyFilters(); sizeStockViewport();
+  });
+
+  // Zapis ilości
+  qtyForm.addEventListener('submit', () => {
+    const newVal = Math.max(0, Number(qtyNew.value || 0));
+    const sel = rows.filter(r => r.querySelector('.row-check')?.checked);
+    sel.forEach(tr => {
+      tr.dataset.qty = String(newVal);
+      const qtyCell = tr.querySelector('td[data-type="qty"]');
+      if (qtyCell) qtyCell.textContent = nf.format(newVal);
+    });
+    offcanvas.hide();
+    markLowStock(); applyFilters(); updateKpi();
+    sel.forEach(tr => { const cb = tr.querySelector('.row-check'); if (cb) cb.checked = false; });
+    updateBulkBar();
+  });
+
+  // Start
+  markLowStock();
+  applyFilters();
+  updateBulkBar();
+});
+</script>
+{% endblock content %}
